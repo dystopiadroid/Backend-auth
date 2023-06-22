@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const register = async (req, res) => {
   try {
@@ -30,4 +31,34 @@ const register = async (req, res) => {
   }
 };
 
-module.exports = register;
+const login = async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+    const existingUser = await User.findOne({ username });
+    if (!existingUser) {
+      res.json("User is not registered");
+    }
+    const passwordMatch = await bcrypt.compare(password, existingUser.password);
+    if (passwordMatch) {
+      const expiresIn = "1h";
+      const payload = { username };
+      const token = jwt.sign(payload, "Balaji", {
+        expiresIn,
+      });
+      const data = {
+        message: "Authentication Successful",
+        token,
+      };
+      res.status(200).json(data);
+    } else {
+      res.status(401).json("Wrong Credentials");
+    }
+  } catch (error) {
+    res.json({ error });
+  }
+};
+
+module.exports = {
+  register,
+  login,
+};
