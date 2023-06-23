@@ -38,10 +38,16 @@ const login = async (req, res) => {
     if (!existingUser) {
       res.json("User is not registered");
     }
+    if (existingUser && role != existingUser.role) {
+      res.json("The roles do not match");
+    }
     const passwordMatch = await bcrypt.compare(password, existingUser.password);
     if (passwordMatch) {
       const expiresIn = "1h";
-      const payload = { username };
+      const payload = {
+        username: existingUser.username,
+        role: existingUser.role,
+      };
       const token = jwt.sign(payload, "Balaji", {
         expiresIn,
       });
